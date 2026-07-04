@@ -26,6 +26,19 @@ NSUInteger searchInArray(NSString* str, NSArray* array) {
     return 0;
 }
 
+static NSDictionary* networkTypeToSettingKey(void) {
+    return @{
+        @"tcp": @"tcpSettings",
+        @"kcp": @"kcpSettings",
+        @"ws": @"wsSettings",
+        @"http": @"httpSettings",
+        @"quic": @"quicSettings",
+        @"grpc": @"grpcSettings",
+        @"httpupgrade": @"httpupgradeSettings",
+        @"xhttp": @"xhttpSettings",
+    };
+}
+
 NSMutableDictionary* normalizedStreamSettingsForXray(NSDictionary* streamSettings) {
     NSMutableDictionary* normalized = [streamSettings isKindOfClass:[NSDictionary class]] ? [streamSettings mutableDeepCopy] : [[NSMutableDictionary alloc] init];
 
@@ -68,6 +81,40 @@ NSMutableDictionary* normalizedStreamSettingsForXray(NSDictionary* streamSetting
             settings[@"password"] = settings[@"publicKey"];
         }
         normalized[settingName] = settings;
+    }
+
+    // Remove transport settings that don't match the selected network type.
+    // At runtime the streamSettings dictionary already has the "network" key set
+    // by outboundProfile.  In the storage path (where "network" is absent) we
+    // keep all transport settings so the UI can still display them.
+    NSString* network = [normalized[@"network"] isKindOfClass:[NSString class]] ? normalized[@"network"] : nil;
+    if (network != nil) {
+        NSDictionary* keyMap = networkTypeToSettingKey();
+        NSString* activeKey = keyMap[network];
+        for (NSString* key in [keyMap allValues]) {
+            if (![key isEqualToString:activeKey] && normalized[key] != nil) {
+                [normalized removeObjectForKey:key];
+            }
+        }
+    }
+
+    // Clean up TLS / XTLS / Reality settings based on the security field.
+    // Only keep the settings that match the chosen security type.
+    NSString* security = [normalized[@"security"] isKindOfClass:[NSString class]] ? normalized[@"security"] : @"none";
+    if ([security isEqualToString:@"tls"]) {
+        [normalized removeObjectForKey:@"xtlsSettings"];
+        [normalized removeObjectForKey:@"realitySettings"];
+    } else if ([security isEqualToString:@"xtls"]) {
+        [normalized removeObjectForKey:@"tlsSettings"];
+        [normalized removeObjectForKey:@"realitySettings"];
+    } else if ([security isEqualToString:@"reality"]) {
+        [normalized removeObjectForKey:@"tlsSettings"];
+        [normalized removeObjectForKey:@"xtlsSettings"];
+    } else {
+        // security is "none" or any other value — remove all TLS/XTLS/Reality settings
+        [normalized removeObjectForKey:@"tlsSettings"];
+        [normalized removeObjectForKey:@"xtlsSettings"];
+        [normalized removeObjectForKey:@"realitySettings"];
     }
 
     return normalized;

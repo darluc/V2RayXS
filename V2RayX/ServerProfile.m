@@ -192,22 +192,22 @@
         settings[@"security"] = VMESS_SECURITY_LIST[security];
     }
 
-    NSDictionary* result =
-    @{
+    NSMutableDictionary* result = [@{
       @"sendThrough": sendThrough,
       @"tag": nilCoalescing(outboundTag, @""),
       @"protocol": PROTOCOL_LIST[protocol],
       @"settings": settings,
       @"streamSettings": fullStreamSettings,
-      @"mux": muxSettings,
-      };
-    
-//    if([@"vless" isEqualToString:result[@"protocol"]]) {
-//        // infra/conf: VLESS users: please add/set "encryption":"none" for every user
-//        result[@"settings"][0][@"vnext"][0][@"users"][0][@"encryption"] = @"none";
-//    }
-//
-    return [result mutableCopy];
+    } mutableCopy];
+
+    // Only include mux when it is explicitly enabled.
+    // VLESS + Reality does not support mux; omitting the entire mux block avoids
+    // xray-core config validation errors for that combination.
+    if ([muxSettings[@"enabled"] boolValue]) {
+        result[@"mux"] = muxSettings;
+    }
+
+    return result;
 }
 
 @synthesize protocol;
