@@ -84,8 +84,8 @@
                                           },
                                   @"sockopt": @{},
                                   @"realitySettings": @{}
-                                  }];
-        muxSettings = @{
+                                   };
+         muxSettings = @{
                                 @"enabled": [NSNumber numberWithBool:NO],
                                 @"concurrency": @8
                                 };
