@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [arm64, x86_64]
+    env:
+      ARCHS: ${{ matrix.arch }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build V2RayXS
+        run: |
+          xcodebuild -project V2RayXS.xcodeproj \
+                     -target V2RayXS \
+                     -configuration Release \
+                     ARCHS="${ARCHS}"
+
+      - name: Package .app
+        run: |
+          cd build/Release
+          zip -r V2RayXS_${ARCHS}.app.zip V2RayXS.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: V2RayXS-${{ matrix.arch }}
+          path: build/Release/V2RayXS_${{ matrix.arch }}.app.zip

@@ -24,7 +24,7 @@
         [self setSecurity:none_security];
         [self setNetwork:tcp];
         [self setSendThrough:@"0.0.0.0"];
-        [self setStreamSettings:@{
+        streamSettings = @{
                                   @"security": @"none",
                                   @"tlsSettings": @{
                                            @"serverName": @"server.cc",
@@ -85,10 +85,10 @@
                                   @"sockopt": @{},
                                   @"realitySettings": @{}
                                   }];
-        [self setMuxSettings:@{
-                               @"enabled": [NSNumber numberWithBool:NO],
-                               @"concurrency": @8
-                               }];
+        muxSettings = @{
+                                @"enabled": [NSNumber numberWithBool:NO],
+                                @"concurrency": @8
+                                };
     }
     return self;
 }
@@ -124,11 +124,11 @@
         profile.flow = searchInArray(vnext[@"users"][0][@"flow"], VLESS_FLOW_LIST);
         profile.security = searchInArray(vnext[@"users"][0][@"security"], VMESS_SECURITY_LIST);
         if (outboundJson[@"streamSettings"] != nil) {
-            profile.streamSettings = outboundJson[@"streamSettings"];
+            profile->streamSettings = outboundJson[@"streamSettings"];
             profile.network = searchInArray(outboundJson[@"streamSettings"][@"network"], NETWORK_LIST);
         }
         if (outboundJson[@"mux"] != nil) {
-            profile.muxSettings = outboundJson[@"mux"];
+            profile->muxSettings = outboundJson[@"mux"];
         }
         profile.sendThrough = sendThrough;
         [profiles addObject:profile];
