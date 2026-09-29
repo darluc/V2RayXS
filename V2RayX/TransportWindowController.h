@@ -28,9 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak) IBOutlet NSTextField *kcpDcField;
 @property (weak) IBOutlet NSTextField *kcpRbField;
 @property (weak) IBOutlet NSTextField *kcpWbField;
-@property (weak) IBOutlet NSTextField *kcpSeedField;
 @property (weak) IBOutlet NSPopUpButton *kcpCongestionButton;
-@property (weak) IBOutlet NSPopUpButton *kcpHeaderTypeButton;
 //tcp fields
 @property (weak) IBOutlet NSButton *tcpHeaderCusButton;
 @property (unsafe_unretained) IBOutlet NSTextView *tcpHeaderField;

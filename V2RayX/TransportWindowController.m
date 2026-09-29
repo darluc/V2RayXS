@@ -29,10 +29,8 @@
     [super windowDidLoad];
     
     //add UI items
-    [_kcpHeaderTypeButton removeAllItems];
     [_quicHeaderButton removeAllItems];
     for (NSString* header in OBFU_LIST) {
-        [_kcpHeaderTypeButton addItemWithTitle:header];
         [_quicHeaderButton addItemWithTitle:header];
     }
     [_quicSecurityButton removeAllItems];
@@ -112,9 +110,6 @@
     [_kcpRbField setIntegerValue:[streamSettings[@"kcpSettings"][@"readBufferSize"] integerValue]];
     [_kcpWbField setIntegerValue:[streamSettings[@"kcpSettings"][@"writeBufferSize"] integerValue]];
     [_kcpCongestionButton selectItemAtIndex:[streamSettings[@"kcpSettings"][@"congestion"] boolValue] ? 1 : 0];
-    [_kcpHeaderTypeButton selectItemAtIndex:searchInArray(streamSettings[@"kcpSettings"][@"header"][@"type"], OBFU_LIST)];
-    NSString *saveKcpSeed = streamSettings[@"kcpSettings"][@"seed"];
-    [_kcpSeedField setStringValue: saveKcpSeed != nil ? saveKcpSeed : @""];
     
     //tcp
     [_tcpHeaderCusButton setState:[streamSettings[@"tcpSettings"][@"header"][@"type"] isEqualToString:@"http"] ? 1 : 0];
@@ -347,9 +342,7 @@
               @"downlinkCapacity":[NSNumber numberWithInteger:[self->_kcpDcField integerValue]],
               @"readBufferSize":[NSNumber numberWithInteger:[self->_kcpRbField integerValue]],
               @"writeBufferSize":[NSNumber numberWithInteger:[self->_kcpWbField integerValue]],
-              @"seed":[self->_kcpSeedField stringValue],
-              @"congestion":[NSNumber numberWithBool:[self->_kcpCongestionButton indexOfSelectedItem] != 0],
-              @"header":@{@"type":[[self->_kcpHeaderTypeButton selectedItem] title]}
+              @"congestion":[NSNumber numberWithBool:[self->_kcpCongestionButton indexOfSelectedItem] != 0]
               },
         @"tcpSettings":@{@"header": tcpHttpHeader},
         @"wsSettings": @{

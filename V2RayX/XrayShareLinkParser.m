@@ -346,14 +346,11 @@ NSErrorDomain const XrayShareLinkParserErrorDomain = @"XrayShareLinkParserErrorD
 }
 
 + (void)applyKCPFields:(NSDictionary<NSString *, NSString *> *)query streamSettings:(NSMutableDictionary *)streamSettings context:(XrayShareLinkParserContext *)context {
-    NSString *headerType = query[@"headerType"];
-    if (headerType.length > 0) {
-        streamSettings[@"kcpSettings"][@"header"][@"type"] = headerType;
-        [self warn:@"mKCP headerType is removed in current Xray-core; imported for legacy compatibility." context:context mayNotRun:YES];
+    if (query[@"headerType"].length > 0) {
+        [self warn:@"mKCP headerType is removed in current Xray-core and was ignored." context:context mayNotRun:YES];
     }
     if (query[@"seed"].length > 0) {
-        streamSettings[@"kcpSettings"][@"seed"] = query[@"seed"];
-        [self warn:@"mKCP seed is removed in current Xray-core; imported for legacy compatibility." context:context mayNotRun:YES];
+        [self warn:@"mKCP seed is removed in current Xray-core and was ignored." context:context mayNotRun:YES];
     }
     [self setUnsignedIntegerQuery:@"mtu" fromQuery:query into:streamSettings[@"kcpSettings"] key:@"mtu"];
     [self setUnsignedIntegerQuery:@"tti" fromQuery:query into:streamSettings[@"kcpSettings"] key:@"tti"];

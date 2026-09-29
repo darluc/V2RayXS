@@ -59,9 +59,6 @@
 /* Class = "NSButtonCell"; title = "TLS allowInsecure"; ObjectID = "Rxl-Fh-p8u"; */
 "Rxl-Fh-p8u.title" = "允许不加密的TLS";
 
-/* Class = "NSTextFieldCell"; title = "header type"; ObjectID = "Uwv-C4-vWW"; */
-"Uwv-C4-vWW.title" = "header type";
-
 /* Class = "NSTextFieldCell"; title = "Mux concurrency:"; ObjectID = "V4v-kP-BDQ"; */
 "V4v-kP-BDQ.title" = "Mux 并发数:";
 

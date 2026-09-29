@@ -409,13 +409,7 @@
         }
         case kcp:
         {
-            if (![sharedServer objectForKey:@"type"]) {
-                break;
-            }
-            if (![@{@"none": @0, @"srtp": @1, @"utp": @2, @"wechat-video":@3, @"dtls":@4, @"wireguard":@5} objectForKey:sharedServer[@"type"]]) {
-                break;
-            }
-            streamSettings[@"kcpSettings"][@"header"][@"type"] = sharedServer[@"type"];
+            // xray-core removed the mKCP header type, so there is nothing to import.
             break;
         case ws:
             if ([[sharedServer objectForKey:@"host"] containsString:@";"]) {
@@ -527,13 +521,7 @@
             }
             break;
         case kcp:
-            if (![sharedServer objectForKey:@"type"]) {
-                break;
-            }
-            if (![@{@"none": @0, @"srtp": @1, @"utp": @2, @"wechat-video":@3, @"dtls":@4, @"wireguard":@5} objectForKey:sharedServer[@"type"]]) {
-                break;
-            }
-            streamSettings[@"kcpSettings"][@"header"][@"type"] = sharedServer[@"type"];
+            // xray-core removed the mKCP header type, so there is nothing to import.
             break;
         case ws:
             if ([[sharedServer objectForKey:@"host"] containsString:@";"]) {

@@ -51,11 +51,7 @@
                                           @"downlinkCapacity": @20,
                                           @"congestion": [NSNumber numberWithBool:NO],
                                           @"readBufferSize": @1,
-                                          @"writeBufferSize": @1,
-                                          @"seed": @"",
-                                          @"header": @{
-                                                  @"type": @"none"
-                                                  }
+                                          @"writeBufferSize": @1
                                           },
                                   @"wsSettings": @{
                                           @"path": @"",

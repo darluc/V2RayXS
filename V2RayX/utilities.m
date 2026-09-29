@@ -42,16 +42,6 @@ static NSDictionary* networkTypeToSettingKey(void) {
 NSMutableDictionary* normalizedStreamSettingsForXray(NSDictionary* streamSettings) {
     NSMutableDictionary* normalized = [streamSettings isKindOfClass:[NSDictionary class]] ? [streamSettings mutableDeepCopy] : [[NSMutableDictionary alloc] init];
 
-    NSMutableDictionary* kcpSettings = [normalized[@"kcpSettings"] isKindOfClass:[NSDictionary class]] ? [normalized[@"kcpSettings"] mutableDeepCopy] : nil;
-    if (kcpSettings != nil) {
-        NSMutableDictionary* kcpHeader = [kcpSettings[@"header"] isKindOfClass:[NSDictionary class]] ? [kcpSettings[@"header"] mutableDeepCopy] : nil;
-        NSString* headerType = [kcpHeader[@"type"] isKindOfClass:[NSString class]] ? kcpHeader[@"type"] : @"none";
-        if (kcpHeader != nil) {
-            kcpSettings[@"header"] = @{@"type": headerType.length > 0 ? headerType : @"none"};
-        }
-        normalized[@"kcpSettings"] = kcpSettings;
-    }
-
     NSMutableDictionary* wsSettings = [normalized[@"wsSettings"] isKindOfClass:[NSDictionary class]] ? [normalized[@"wsSettings"] mutableDeepCopy] : nil;
     if (wsSettings != nil) {
         NSMutableDictionary* headers = [wsSettings[@"headers"] isKindOfClass:[NSDictionary class]] ? [wsSettings[@"headers"] mutableDeepCopy] : nil;
@@ -122,6 +112,17 @@ NSMutableDictionary* normalizedStreamSettingsForXray(NSDictionary* streamSetting
 
 NSMutableDictionary* normalizedStreamSettingsForXrayForCore(NSDictionary* streamSettings, BOOL rejectsTLSAllowInsecure) {
     NSMutableDictionary* normalized = normalizedStreamSettingsForXray(streamSettings);
+
+    // xray-core removed the mKCP "header" and "seed" fields; providing either one
+    // makes the core fail to build the config.  They are only dropped from the
+    // generated config, so profiles created by older versions of the app keep
+    // their values instead of being silently rewritten on the next save.
+    NSMutableDictionary* kcpSettings = [normalized[@"kcpSettings"] isKindOfClass:[NSDictionary class]] ? [normalized[@"kcpSettings"] mutableDeepCopy] : nil;
+    if (kcpSettings != nil) {
+        [kcpSettings removeObjectForKey:@"header"];
+        [kcpSettings removeObjectForKey:@"seed"];
+        normalized[@"kcpSettings"] = kcpSettings;
+    }
 
     NSArray* tlsSettingNames = @[@"tlsSettings", @"xtlsSettings"];
     for (NSString* settingName in tlsSettingNames) {
