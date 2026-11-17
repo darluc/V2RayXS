@@ -20,7 +20,7 @@ concurrency:
 jobs:
   release:
     name: Build & Publish
-    runs-on: macos-15
+    runs-on: macos-14
     timeout-minutes: 60
     defaults:
       run:
