@@ -184,6 +184,24 @@
     return true; //  pass checking
 }
 
+- (BOOL)checkVLESSEncryption {
+    for (ServerProfile* p in _profiles) {
+        if (p.protocol != vless) {
+            continue;
+        }
+        NSString* encryption = p.userEncryption;
+        if (encryption == nil || encryption.length == 0 || [encryption isEqualToString:@"none"] || [encryption hasPrefix:@"mlkem768x25519plus"]) {
+            continue;
+        }
+        NSAlert *vlessEncryptionAlert = [[NSAlert alloc] init];
+        [vlessEncryptionAlert addButtonWithTitle:@"Close"];
+        [vlessEncryptionAlert setMessageText:[NSString stringWithFormat:@"Unsupported VLESS encryption '%@' for server '%@'. Xray only accepts 'none' or a 'mlkem768x25519plus...' key string.", encryption, nilCoalescing(p.outboundTag, @"")]];
+        [vlessEncryptionAlert beginSheetModalForWindow:self.window completionHandler:nil];
+        return NO;
+    }
+    return YES;
+}
+
 - (IBAction)addRemoveServer:(id)sender {
     [[self window] makeFirstResponder:_profileTable];
     if ([sender selectedSegment] == 0) {
@@ -240,6 +258,9 @@
 
 - (IBAction)okSave:(id)sender {
     if (![self checkTLSforHttp2]) {
+        return;
+    }
+    if (![self checkVLESSEncryption]) {
         return;
     }
     NSMutableArray *managedOutbounds = [[NSMutableArray alloc] init];

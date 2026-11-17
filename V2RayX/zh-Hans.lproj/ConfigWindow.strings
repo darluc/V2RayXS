@@ -148,3 +148,9 @@
 
 /* Class = "NSMenuItem"; title = "Item"; ObjectID = "tLs-gB-gFx"; */
 "tLs-gB-gFx.title" = "Item";
+
+/* Class = "NSTextFieldCell"; title = "Encryption:"; ObjectID = "vle-3n-cRy1"; */
+"vle-3n-cRy1.title" = "加密:";
+
+/* Class = "NSTextField"; toolTip = "VLESS encryption: none, or a mlkem768x25519plus... key string (generate with xray x25519 / xray mlkem768)"; ObjectID = "VLe-3n-EnC2"; */
+"VLe-3n-EnC2.toolTip" = "VLESS 加密：\"none\" 或 mlkem768x25519plus... 密钥串（可用 xray x25519 / xray mlkem768 生成）";
