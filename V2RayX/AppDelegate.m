@@ -1523,7 +1523,7 @@ static int normalizedExitCodeFromWaitStatus(int status) {
 }
 
 - (IBAction)openReleasePage:(id)sender {
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/tzmax/V2RayXS/releases/latest"]];
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/darluc/V2RayXS/releases/latest"]];
 }
 
 - (IBAction)showAboutPanel:(id)sender {
@@ -1549,7 +1549,7 @@ static int normalizedExitCodeFromWaitStatus(int status) {
 }
 
 - (IBAction)checkUpgrade:(id)sender {
-    NSURL* url =[NSURL URLWithString:@"https://api.github.com/repos/tzmax/v2rayxs/releases/latest"];
+    NSURL* url =[NSURL URLWithString:@"https://api.github.com/repos/darluc/V2RayXS/releases/latest"];
     NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         __block BOOL shouldShowUpgrade = NO;
         @try {

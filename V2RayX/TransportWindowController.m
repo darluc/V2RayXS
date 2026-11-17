@@ -150,7 +150,7 @@
     NSArray* alpnArray = streamSettings[@"tlsSettings"][@"alpn"];
     NSString* alpnString = [alpnArray componentsJoinedByString:@","];
     [_tlsAlpnField setStringValue:nilCoalescing(alpnString, @"http/1.1")];
-    [_tlsServerNameField setStringValue:streamSettings[@"tlsSettings"][@"serverName"]];
+    [_tlsServerNameField setStringValue:nilCoalescing(streamSettings[@"tlsSettings"][@"serverName"], @"")];
     [_realityFingerprint setStringValue:nilCoalescing(tlsSettings[@"fingerprint"], @"chrome")];
     NSDictionary* activeTLSSettings = [self activeTLSSettingsFromStreamSettings:streamSettings];
     NSString* manualPin = nilCoalescing(activeTLSSettings[@"pinnedPeerCertSha256"], @"");
@@ -180,7 +180,7 @@
         alpnArray = streamSettings[@"xtlsSettings"][@"alpn"];
         alpnString = [alpnArray componentsJoinedByString:@","];
         [_tlsAlpnField setStringValue:nilCoalescing(alpnString, @"http/1.1")];
-        [_tlsServerNameField setStringValue:streamSettings[@"xtlsSettings"][@"serverName"]];
+        [_tlsServerNameField setStringValue:nilCoalescing(streamSettings[@"xtlsSettings"][@"serverName"], @"")];
         [_realityFingerprint setStringValue:nilCoalescing(xtlsSettings[@"fingerprint"], @"chrome")];
     }
     currentCertSha256Endpoint = [self certSha256EndpointForCurrentSettings];
