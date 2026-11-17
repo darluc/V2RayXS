@@ -1,0 +1,155 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version or tag (e.g. 1.5.1 or v1.5.1)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build & Publish
+    runs-on: macos-15
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Resolve version and tag
+        id: version
+        env:
+          REQUESTED_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$REQUESTED_VERSION" == v* ]]; then
+            TAG="$REQUESTED_VERSION"
+            VERSION="${REQUESTED_VERSION#v}"
+          else
+            TAG="v$REQUESTED_VERSION"
+            VERSION="$REQUESTED_VERSION"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "::error::Expected a numeric version such as 1.5.1 or v1.5.1."
+            exit 1
+          fi
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            if [[ "$(git rev-parse "refs/tags/$TAG^{commit}")" != "$(git rev-parse HEAD)" ]]; then
+              echo "::error::Tag $TAG points to a different commit. Run this workflow on that tag."
+              exit 1
+            fi
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app && xcodebuild -version
+
+      - name: Build arm64
+        run: |
+          set -euo pipefail
+          # The project still targets macOS 10.13, which current Xcode no longer
+          # accepts; 12.0 matches the minimum supported by modern toolchains.
+          xcodebuild -project V2RayXS.xcodeproj -target V2RayXS -configuration Release \
+            ARCHS="arm64" ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            MACOSX_DEPLOYMENT_TARGET=12.0 build
+          lipo -archs build/Release/V2RayXS.app/Contents/MacOS/V2RayXS | grep -qw arm64
+
+      - name: Package arm64
+        run: |
+          set -euo pipefail
+          cd build/Release
+          ZIP="V2RayXS-${{ steps.version.outputs.version }}-arm64.app.zip"
+          zip -r "$ZIP" V2RayXS.app
+          {
+            echo "MD5=$(md5 -q "$ZIP")"
+            echo "SHA1=$(shasum -a 1 "$ZIP" | cut -d' ' -f1)"
+            echo "SHA2-256=$(shasum -a 256 "$ZIP" | cut -d' ' -f1)"
+          } > "$ZIP.dgst"
+
+      - name: Build x86_64
+        run: |
+          set -euo pipefail
+          xcodebuild -project V2RayXS.xcodeproj -target V2RayXS -configuration Release \
+            ARCHS="x86_64" ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            MACOSX_DEPLOYMENT_TARGET=12.0 build
+          lipo -archs build/Release/V2RayXS.app/Contents/MacOS/V2RayXS | grep -qw x86_64
+
+      - name: Package x86_64
+        run: |
+          set -euo pipefail
+          cd build/Release
+          ZIP="V2RayXS-${{ steps.version.outputs.version }}-x86_64.app.zip"
+          zip -r "$ZIP" V2RayXS.app
+          {
+            echo "MD5=$(md5 -q "$ZIP")"
+            echo "SHA1=$(shasum -a 1 "$ZIP" | cut -d' ' -f1)"
+            echo "SHA2-256=$(shasum -a 256 "$ZIP" | cut -d' ' -f1)"
+          } > "$ZIP.dgst"
+
+      - name: Verify release artifacts
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          for arch in arm64 x86_64; do
+            ZIP="build/Release/V2RayXS-$VERSION-$arch.app.zip"
+            [[ -s "$ZIP" ]] || { echo "::error::Missing artifact: $ZIP"; exit 1; }
+            unzip -tq "$ZIP" >/dev/null
+            [[ -s "$ZIP.dgst" ]] || { echo "::error::Missing digest: $ZIP.dgst"; exit 1; }
+          done
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: V2RayXS-${{ steps.version.outputs.version }}
+          if-no-files-found: error
+          path: |
+            build/Release/V2RayXS-${{ steps.version.outputs.version }}-*.app.zip
+            build/Release/V2RayXS-${{ steps.version.outputs.version }}-*.app.zip.dgst
+
+      - name: Publish GitHub Release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if ! git show-ref --verify --quiet "refs/tags/$TAG"; then
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              "build/Release/V2RayXS-$VERSION-arm64.app.zip" \
+              "build/Release/V2RayXS-$VERSION-arm64.app.zip.dgst" \
+              "build/Release/V2RayXS-$VERSION-x86_64.app.zip" \
+              "build/Release/V2RayXS-$VERSION-x86_64.app.zip.dgst" \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "V2RayXS $VERSION" --generate-notes \
+              "build/Release/V2RayXS-$VERSION-arm64.app.zip" \
+              "build/Release/V2RayXS-$VERSION-arm64.app.zip.dgst" \
+              "build/Release/V2RayXS-$VERSION-x86_64.app.zip" \
+              "build/Release/V2RayXS-$VERSION-x86_64.app.zip.dgst"
+          fi

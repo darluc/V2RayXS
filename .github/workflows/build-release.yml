@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - '**'
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -44,10 +42,3 @@ jobs:
         with:
           name: V2RayXS-${{ runner.arch }}
           path: build/Release/V2RayXS.app.zip
-
-      - name: Create Release (tagged only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: build/Release/V2RayXS.app.zip
-          generate_release_notes: true
